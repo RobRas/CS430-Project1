@@ -38,8 +38,10 @@ int getWidthAndHeight(char* widthAndHeight, int* width, int* height) {
 	}
 	if (i == 10) {
 		fprintf(stderr, "File width too large.");
+		return 1;
 	} else if (widthAndHeight[i] != ' ') {
 		fprintf(stderr, "Not a PPM file.\n");
+		return 1;
 	} else {
 		*width = atoi(w);
 		
@@ -54,19 +56,25 @@ int getWidthAndHeight(char* widthAndHeight, int* width, int* height) {
 		}
 		if (j == 8) {
 			fprintf(stderr, "File height too large.");
+			return 1;
 		} else if (widthAndHeight[i] != '\n') {
 			printf("Not a PPM File.\n");
+			return 1;
 		} else {
 			*height = atoi(h);
 		}
 	}
+	
+	return 0;
 }
 
 int loadPPM3() {
 	char* widthAndHeight;
 	widthAndHeight = parseWidthAndHeight();
 	int width, height;
-	getWidthAndHeight(widthAndHeight, &width, &height);
+	if (getWidthAndHeight(widthAndHeight, &width, &height)) {
+		return 1;
+	}
 	return 0;
 }
 
