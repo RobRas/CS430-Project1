@@ -1,13 +1,15 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 typedef struct Pixel {
 	unsigned char r, g, b;
 } Pixel;
 
 Pixel* pixmap;
+FILE* fh;
 
-int width, height;
+
 
 int main(int argc, char* argv[]) {
 	if (argc != 4) {
@@ -15,9 +17,27 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 	
-	FILE* fh = fopen("output.data", "w");
-	fwrite(argv[1], sizeof(char), 1, fh);
-	fclose(fh);
+	char PPMFileType [3];
+	
+	fh = fopen(argv[2], "r");
+	if (fh == NULL) {
+		fprintf(stderr, "File not found.");
+	} else {
+		if (fgets(PPMFileType, 3, fh) != NULL) {
+			int compare = strcmp(PPMFileType, "P3");
+			if (compare) {
+				printf("We found P3");
+			} else {
+				compare = strcmp(PPMFileType, "P6");
+				if (compare) {
+					printf("We found P6");
+				} else {
+					fprintf(stderr, "Not a PPM file");
+				}
+			}
+		}
+		fclose(fh);
+	}
 	
 	return 0;
 }
