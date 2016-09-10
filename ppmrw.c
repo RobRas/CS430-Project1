@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -9,7 +10,7 @@ typedef struct Pixel {
 Pixel* pixmap;
 FILE* fh;
 
-char* getWidthAndHeight() {
+char* parseWidthAndHeight() {
 	char checkAgain = 1;
 	char* comments = malloc(sizeof(char) * 1000);
 	
@@ -23,13 +24,49 @@ char* getWidthAndHeight() {
 			}
 		}
 	}
+	
 	return comments;
+}
+
+int getWidthAndHeight(char* widthAndHeight, int* width, int* height) {
+	// Get Width
+	int i = 0;
+	char w[10];
+	while (isdigit(widthAndHeight[i]) && i < 10) {
+		w[i] = widthAndHeight[i];
+		i++;
+	}
+	if (i == 10) {
+		fprintf(stderr, "File width too large.");
+	} else if (widthAndHeight[i] != ' ') {
+		fprintf(stderr, "Not a PPM file.\n");
+	} else {
+		*width = atoi(w);
+		
+		// Get Height
+		i++;	// Skip space
+		int j = 0;
+		char h[8];
+		while (isdigit(widthAndHeight[i]) && j < 8) {
+			h[j] = widthAndHeight[i];
+			i++;
+			j++;
+		}
+		if (j == 8) {
+			fprintf(stderr, "File height too large.");
+		} else if (widthAndHeight[i] != '\n') {
+			printf("Not a PPM File.\n");
+		} else {
+			*height = atoi(h);
+		}
+	}
 }
 
 int loadPPM3() {
 	char* widthAndHeight;
-	widthAndHeight = getWidthAndHeight();
-	printf("%s", widthAndHeight);
+	widthAndHeight = parseWidthAndHeight();
+	int width, height;
+	getWidthAndHeight(widthAndHeight, &width, &height);
 	return 0;
 }
 
