@@ -10,6 +10,8 @@ typedef struct Pixel {
 char convertFrom;
 char convertTo;
 
+int width, height;
+
 int maxColorValue;
 
 Pixel* pixmap;
@@ -44,7 +46,7 @@ int toDigit(char* input, int* output) {
 	return 0;
 }
 
-int getWidthAndHeight(char* widthAndHeight, int* width, int* height) {
+int getWidthAndHeight(char* widthAndHeight) {
 	// Get Width
 	int i = 0;
 	char w[10];
@@ -59,7 +61,7 @@ int getWidthAndHeight(char* widthAndHeight, int* width, int* height) {
 		fprintf(stderr, "Not a PPM file. Incompatible width.\n");
 		return 1;
 	} else {
-		*width = atoi(w);
+		width = atoi(w);
 		
 		// Get Height
 		i++;	// Skip space
@@ -77,7 +79,7 @@ int getWidthAndHeight(char* widthAndHeight, int* width, int* height) {
 			printf("Not a PPM File. Incompatible height.\n");
 			return 1;
 		} else {
-			*height = atoi(h);
+			height = atoi(h);
 		}
 	}
 	
@@ -157,8 +159,7 @@ int getMaxColorValue() {
 int loadPPM3() {
 	char* widthAndHeight;
 	widthAndHeight = parseWidthAndHeight();
-	int width, height;
-	if (getWidthAndHeight(widthAndHeight, &width, &height)) {
+	if (getWidthAndHeight(widthAndHeight)) {
 		return 1;
 	}
 	pixmap = malloc(sizeof(Pixel) * width * height);
@@ -171,6 +172,14 @@ int loadPPM3() {
 		i++;
 	}
 	
+	return 0;
+}
+
+int writePPM6() {
+	char str[100];
+	sprintf(str, "P6\n# Converted with Robert Rasmussen's ppmrw\n%d %d\n%d\n", width, height, maxColorValue);
+	fwrite(str, sizeof(str), 1, fh);
+	fwrite(pixmap, sizeof(Pixel), width*height, fh);
 	return 0;
 }
 
@@ -196,6 +205,7 @@ int getPPMFileType() {
 		if (!compare) {
 			convertFrom = '3';
 			loadPPM3();
+			
 		} else {
 			compare = strcmp(PPMFileType, "P6\n");
 			if (!compare) {
@@ -224,13 +234,28 @@ int main(int argc, char* argv[]) {
 	
 	fh = fopen(argv[2], "r");
 	if (fh == NULL) {
-		fprintf(stderr, "File not found.");
+		fprintf(stderr, "Input file not found.");
 		return 1;
 	}
 	
 	if (getPPMFileType()) {
 		return 1;
 	}
+	
+	fclose(fh);
+	
+	fh = fopen(argv[3], "w");
+	if (fh == NULL) {
+		fprintf(stderr, "Output file not found.");
+		return 1;
+	}
+	
+	if (convertTo = '6') {
+		if (writePPM6()) {
+			return 1;
+		}
+	}
+	
 	fclose(fh);
 	free(pixmap);
 	
