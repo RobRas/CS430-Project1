@@ -10,6 +10,8 @@ typedef struct Pixel {
 char convertFrom;
 char convertTo;
 
+int maxColorValue;
+
 Pixel* pixmap;
 FILE* fh;
 
@@ -22,13 +24,26 @@ char* parseWidthAndHeight() {
 			if (comments[0] == '#') {
 				//fgets(comments, 1000, fh); // Ignore empty line
 			} else {
-				printf("%s", comments);
 				checkAgain = 0;
 			}
 		}
 	}
 	
 	return comments;
+}
+
+int toDigit(char* input, int* output) {
+	int i = 0;
+	while(isdigit(input[i])) {
+		i++;
+	}
+	if (input[i] != '\n' && input[i] != '\0' || i == 0) {
+		fprintf(stderr, "Not a PPM file. Incompatible digit: %s\n", input);
+		return 1;
+	}
+	
+	*output = atoi(input);
+	return 0;
 }
 
 int getWidthAndHeight(char* widthAndHeight, int* width, int* height) {
@@ -43,7 +58,7 @@ int getWidthAndHeight(char* widthAndHeight, int* width, int* height) {
 		fprintf(stderr, "File width too large.");
 		return 1;
 	} else if (widthAndHeight[i] != ' ') {
-		fprintf(stderr, "Not a PPM file.\n");
+		fprintf(stderr, "Not a PPM file. Incompatible width.\n");
 		return 1;
 	} else {
 		*width = atoi(w);
@@ -61,10 +76,80 @@ int getWidthAndHeight(char* widthAndHeight, int* width, int* height) {
 			fprintf(stderr, "File height too large.");
 			return 1;
 		} else if (widthAndHeight[i] != '\n') {
-			printf("Not a PPM File.\n");
+			printf("Not a PPM File. Incompatible height.\n");
 			return 1;
 		} else {
 			*height = atoi(h);
+		}
+	}
+	
+	return 0;
+}
+
+int parsePPM3(int index) {
+	char value[5];
+	int rgbValue;
+	
+	if (fgets(value, 5, fh) != NULL) {
+		if (toDigit(value, &rgbValue)) {
+			return 1;
+		}
+		if (rgbValue > maxColorValue) {
+			fprintf(stderr, "Color value exceeding max.");
+			return 1;
+		}
+		pixmap[index].r = rgbValue;
+	} else {
+		fprintf(stderr, "File is not a PPM. Incompatible R value.\n");
+		printf("%d", index);
+		return 1;
+	}
+	
+	if (fgets(value, 5, fh) != NULL) {
+		if (toDigit(value, &rgbValue)) {
+			return 1;
+		}
+		if (rgbValue > maxColorValue) {
+			fprintf(stderr, "Color value exceeding max.");
+			return 1;
+		}
+		pixmap[index].g = rgbValue;
+	} else {
+		fprintf(stderr, "File is not a PPM. Incompatible G value\n");
+		return 1;
+	}
+	
+	if (fgets(value, 5, fh) != NULL) {
+		if (toDigit(value, &rgbValue)) {
+			return 1;
+		}
+		if (rgbValue > maxColorValue) {
+			fprintf(stderr, "Color value exceeding max.");
+			return 1;
+		}
+		pixmap[index].b = rgbValue;
+		return 0;
+	} else {
+		fprintf(stderr, "File is not a PPM. Incompatible B value\n");
+		return 1;
+	}
+	
+	return 0;
+}
+
+int getMaxColorValue() {
+	char value[4];
+	
+	if (fgets(value, 4, fh) != NULL) {
+		if (toDigit(value, &maxColorValue)) {
+			return 1;
+		}
+		if (maxColorValue > 255) {
+			fprintf(stderr, "Not a PPM file. Max color value too high.\n");
+			return 1;
+		} else if (maxColorValue < 1) {
+			fprintf(stderr, "Not a PPM file. Max color value too low.\n");
+			return 1;
 		}
 	}
 	
@@ -79,6 +164,17 @@ int loadPPM3() {
 		return 1;
 	}
 	pixmap = malloc(sizeof(Pixel) * width * height);
+	getMaxColorValue();
+	char value[5];
+	fgets(value, 5, fh);	// Skip blank space
+	int i = 0;
+	while (i < width * height) {
+		if (parsePPM3(i)) {
+			return 1;
+		}
+		i++;
+	}
+	
 	return 0;
 }
 
@@ -111,7 +207,7 @@ int getPPMFileType() {
 				convertFrom = '6';
 				fgets(PPMFileType, 3, fh);	// Ignore empty line
 			} else {
-				fprintf(stderr, "Not a PPM file\n");
+				fprintf(stderr, "Not a PPM file. Incompatible file type.\n");
 				return 1;
 			}
 		}
@@ -142,6 +238,7 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 	fclose(fh);
+	free(pixmap);
 	
 	return returnValue;
 }
