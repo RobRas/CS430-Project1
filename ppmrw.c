@@ -21,9 +21,7 @@ char* parseWidthAndHeight() {
 	
 	while (checkAgain) {
 		if (fgets(comments, 1000, fh) != NULL) {
-			if (comments[0] == '#') {
-				//fgets(comments, 1000, fh); // Ignore empty line
-			} else {
+			if (comments[0] != '#') {
 				checkAgain = 0;
 			}
 		}
@@ -138,9 +136,9 @@ int parsePPM3(int index) {
 }
 
 int getMaxColorValue() {
-	char value[4];
+	char value[10];
 	
-	if (fgets(value, 4, fh) != NULL) {
+	if (fgets(value, 10, fh) != NULL) {
 		if (toDigit(value, &maxColorValue)) {
 			return 1;
 		}
@@ -165,8 +163,6 @@ int loadPPM3() {
 	}
 	pixmap = malloc(sizeof(Pixel) * width * height);
 	getMaxColorValue();
-	char value[5];
-	fgets(value, 5, fh);	// Skip blank space
 	int i = 0;
 	while (i < width * height) {
 		if (parsePPM3(i)) {
@@ -193,19 +189,17 @@ int getConversionType(char* arg) {
 }
 
 int getPPMFileType() {
-	char PPMFileType [3];
+	char PPMFileType [4];
 	
-	if (fgets(PPMFileType, 3, fh) != NULL) {
-		int compare = strcmp(PPMFileType, "P3");
+	if (fgets(PPMFileType, 4, fh) != NULL) {
+		int compare = strcmp(PPMFileType, "P3\n");
 		if (!compare) {
 			convertFrom = '3';
-			fgets(PPMFileType, 3, fh);	// Ignore empty line
 			loadPPM3();
 		} else {
-			compare = strcmp(PPMFileType, "P6");
+			compare = strcmp(PPMFileType, "P6\n");
 			if (!compare) {
 				convertFrom = '6';
-				fgets(PPMFileType, 3, fh);	// Ignore empty line
 			} else {
 				fprintf(stderr, "Not a PPM file. Incompatible file type.\n");
 				return 1;
