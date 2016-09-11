@@ -7,6 +7,9 @@ typedef struct Pixel {
 	unsigned char r, g, b;
 } Pixel;
 
+char convertFrom;
+char convertTo;
+
 Pixel* pixmap;
 FILE* fh;
 
@@ -75,6 +78,45 @@ int loadPPM3() {
 	if (getWidthAndHeight(widthAndHeight, &width, &height)) {
 		return 1;
 	}
+	pixmap = malloc(sizeof(Pixel) * width * height);
+	return 0;
+}
+
+int getConversionType(char* arg) {
+	int compare = strcmp(arg, "3");
+	if (!compare) {
+		compare = strcmp(arg, "6");
+		if (!compare) {
+			fprintf(stderr, "Target needs to be 3 or 6.\n");
+			return 1;
+		}
+	}
+	
+	convertTo = arg[0];
+	return 0;
+}
+
+int getPPMFileType() {
+	char PPMFileType [3];
+	
+	if (fgets(PPMFileType, 3, fh) != NULL) {
+		int compare = strcmp(PPMFileType, "P3");
+		if (!compare) {
+			convertFrom = '3';
+			fgets(PPMFileType, 3, fh);	// Ignore empty line
+			loadPPM3();
+		} else {
+			compare = strcmp(PPMFileType, "P6");
+			if (!compare) {
+				convertFrom = '6';
+				fgets(PPMFileType, 3, fh);	// Ignore empty line
+			} else {
+				fprintf(stderr, "Not a PPM file\n");
+				return 1;
+			}
+		}
+	}
+	
 	return 0;
 }
 
@@ -82,34 +124,24 @@ int main(int argc, char* argv[]) {
 	int returnValue = 0;
 	
 	if (argc != 4) {
-		fprintf(stderr, "Usage: ppmrw target input output");
+		fprintf(stderr, "Usage: ppmrw target input output.\n");
 		return 1;
 	}
 	
-	char PPMFileType [3];
+	if (getConversionType(argv[1])) {
+		return 1;
+	}
 	
 	fh = fopen(argv[2], "r");
 	if (fh == NULL) {
 		fprintf(stderr, "File not found.");
 		return 1;
-	} else {
-		if (fgets(PPMFileType, 3, fh) != NULL) {
-			int compare = strcmp(PPMFileType, "P3");
-			if (!compare) {
-				printf("We found P3\n");
-				fgets(PPMFileType, 3, fh);	// Ignore empty line
-				loadPPM3();
-			} else {
-				compare = strcmp(PPMFileType, "P6");
-				if (!compare) {
-					printf("We found P6\n");
-				} else {
-					fprintf(stderr, "Not a PPM file\n");
-				}
-			}
-		}
-		fclose(fh);
 	}
+	
+	if (getPPMFileType()) {
+		return 1;
+	}
+	fclose(fh);
 	
 	return returnValue;
 }
