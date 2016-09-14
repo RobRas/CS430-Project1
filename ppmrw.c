@@ -97,7 +97,7 @@ int getP3Value(unsigned char* outValue) {
 	}
 }
 
-int parsePPM3(int index) {
+int parseP3(int index) {
 	if (getP3Value(&pixmap[index].r)) {
 		return 1;
 	}
@@ -111,7 +111,7 @@ int parsePPM3(int index) {
 	return 0;
 }
 
-int parsePPM6(int index) {
+int parseP6(int index) {
 	pixmap[index].r = fgetc(fh);
 	pixmap[index].g = fgetc(fh);
 	pixmap[index].b = fgetc(fh);
@@ -119,19 +119,27 @@ int parsePPM6(int index) {
 }
 
 int getMaxColorValue() {
-	char value[10];
+	char value[4];
 	
-	if (fgets(value, 10, fh) != NULL) {
-		if (toDigit(value, &maxColorValue)) {
+	for (int i = 0; i < 4; i++) {
+		value[i] = fgetc(fh);
+		if (value[i] == '\n') {
+			value[i] = '\0';
+			break;
+		} else if (!isdigit(value[i])) {
+			fprintf(stderr, "Value must be a digit.");
 			return 1;
 		}
-		if (maxColorValue > 255) {
-			fprintf(stderr, "Not a PPM file. Max color value too high.\n");
-			return 1;
-		} else if (maxColorValue < 1) {
-			fprintf(stderr, "Not a PPM file. Max color value too low.\n");
-			return 1;
-		}
+	}
+	
+	maxColorValue = atoi(value);
+	
+	if (maxColorValue > 255) {
+		fprintf(stderr, "Not a PPM file. Max color value too high.\n");
+		return 1;
+	} else if (maxColorValue < 1) {
+		fprintf(stderr, "Not a PPM file. Max color value too low.\n");
+		return 1;
 	}
 	
 	return 0;
@@ -140,22 +148,16 @@ int getMaxColorValue() {
 int loadPPM() {
 	char* widthAndHeight;
 	widthAndHeight = parseWidthAndHeight();
-	if (getWidthAndHeight(widthAndHeight)) {
-		return 1;
-	}
+	if (getWidthAndHeight(widthAndHeight)) { return 1; }
 	pixmap = malloc(sizeof(Pixel) * width * height);
-	getMaxColorValue();
+	if (getMaxColorValue()) { return 1; }
 	if (convertFrom == '3') {
 		for (int i = 0; i < width * height; i++) {
-			if (parsePPM3(i)) {
-				return 1;
-			}
+			if (parseP3(i)) { return 1; }
 		}
 	} else {
 		for (int i = 0; i < width * height; i++) {
-			if (parsePPM6(i)) {
-				return 1;
-			}
+			if (parseP6(i)) { return 1; }
 		}
 	}
 	return 0;
