@@ -161,7 +161,7 @@ int parseP6() {
 }
 
 int loadPPM() {
-	getWidthAndHeight();
+	if (getWidthAndHeight()) { return 1; }
 	pixmap = malloc(sizeof(Pixel) * width * height);
 	if (getMaxColorValue()) { return 1; }
 	if (convertFrom == '3') {
