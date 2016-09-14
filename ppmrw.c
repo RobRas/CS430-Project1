@@ -32,20 +32,6 @@ char* parseWidthAndHeight() {
 	return comments;
 }
 
-int toDigit(char* input, int* output) {
-	int i = 0;
-	while(isdigit(input[i])) {
-		i++;
-	}
-	if (input[i] != '\n' && input[i] != '\0' || i == 0) {
-		fprintf(stderr, "Not a PPM file. Incompatible digit: %s\n", input);
-		return 1;
-	}
-	
-	*output = atoi(input);
-	return 0;
-}
-
 int getWidthAndHeight(char* widthAndHeight) {
 	// Get Width
 	int i = 0;
@@ -86,54 +72,49 @@ int getWidthAndHeight(char* widthAndHeight) {
 	return 0;
 }
 
-int parsePPM3(int index) {
-	char value[5];
+int getP3Value(unsigned char* outValue) {
+	char value[4];
 	int rgbValue;
 	
-	if (fgets(value, 5, fh) != NULL) {
-		if (toDigit(value, &rgbValue)) {
+	for (int i = 0; i < 4; i++) {
+		value[i] = fgetc(fh);
+		if (value[i] == '\n') {
+			value[i] = '\0';
+			break;
+		} else if (!isdigit(value[i])) {
+			fprintf(stderr, "Value must be a digit.");
 			return 1;
 		}
-		if (rgbValue > maxColorValue) {
-			fprintf(stderr, "Color value exceeding max.");
-			return 1;
-		}
-		pixmap[index].r = rgbValue;
-	} else {
-		fprintf(stderr, "File is not a PPM. Incompatible R value.\n");
-		printf("%d", index);
-		return 1;
 	}
 	
-	if (fgets(value, 5, fh) != NULL) {
-		if (toDigit(value, &rgbValue)) {
-			return 1;
-		}
-		if (rgbValue > maxColorValue) {
-			fprintf(stderr, "Color value exceeding max.");
-			return 1;
-		}
-		pixmap[index].g = rgbValue;
-	} else {
-		fprintf(stderr, "File is not a PPM. Incompatible G value\n");
+	rgbValue = atoi(value);
+	if (rgbValue > maxColorValue) {
+		fprintf(stderr, "Color value exceeding max.");
 		return 1;
-	}
-	
-	if (fgets(value, 5, fh) != NULL) {
-		if (toDigit(value, &rgbValue)) {
-			return 1;
-		}
-		if (rgbValue > maxColorValue) {
-			fprintf(stderr, "Color value exceeding max.");
-			return 1;
-		}
-		pixmap[index].b = rgbValue;
+	} else {
+		*outValue = rgbValue;
 		return 0;
-	} else {
-		fprintf(stderr, "File is not a PPM. Incompatible B value\n");
+	}
+}
+
+int parsePPM3(int index) {
+	if (getP3Value(&pixmap[index].r)) {
+		return 1;
+	}
+	if (getP3Value(&pixmap[index].g)) {
+		return 1;
+	}
+	if (getP3Value(&pixmap[index].b)) {
 		return 1;
 	}
 	
+	return 0;
+}
+
+int parsePPM6(int index) {
+	pixmap[index].r = fgetc(fh);
+	pixmap[index].g = fgetc(fh);
+	pixmap[index].b = fgetc(fh);
 	return 0;
 }
 
@@ -156,7 +137,7 @@ int getMaxColorValue() {
 	return 0;
 }
 
-int loadPPM3() {
+int loadPPM() {
 	char* widthAndHeight;
 	widthAndHeight = parseWidthAndHeight();
 	if (getWidthAndHeight(widthAndHeight)) {
@@ -164,22 +145,37 @@ int loadPPM3() {
 	}
 	pixmap = malloc(sizeof(Pixel) * width * height);
 	getMaxColorValue();
-	int i = 0;
-	while (i < width * height) {
-		if (parsePPM3(i)) {
-			return 1;
+	if (convertFrom == '3') {
+		for (int i = 0; i < width * height; i++) {
+			if (parsePPM3(i)) {
+				return 1;
+			}
 		}
-		i++;
+	} else {
+		for (int i = 0; i < width * height; i++) {
+			if (parsePPM6(i)) {
+				return 1;
+			}
+		}
 	}
-	
 	return 0;
 }
 
-int writePPM6() {
-	char str[100];
-	sprintf(str, "P6\n# Converted with Robert Rasmussen's ppmrw\n%d %d\n%d\n", width, height, maxColorValue);
-	fwrite(str, sizeof(str), 1, fh);
-	fwrite(pixmap, sizeof(Pixel), width*height, fh);
+int writeP3() {
+	fprintf(fh, "P3\n# Converted with Robert Rasmussen's ppmrw\n%d %d\n%d\n", width, height, maxColorValue);
+	for (int i = 0; i < width * height; i++) {
+		fprintf(fh, "%d\n%d\n%d\n", pixmap[i].r, pixmap[i].g, pixmap[i].b);
+	}
+	return 0;
+}
+
+int writeP6() {
+	fprintf(fh, "P6\n# Converted with Robert Rasmussen's ppmrw\n%d %d\n%d\n", width, height, maxColorValue);
+	for (int i = 0; i < width * height; i++) {
+		putc(pixmap[i].r, fh);
+		putc(pixmap[i].g, fh);
+		putc(pixmap[i].b, fh);
+	}
 	return 0;
 }
 
@@ -204,8 +200,6 @@ int getPPMFileType() {
 		int compare = strcmp(PPMFileType, "P3\n");
 		if (!compare) {
 			convertFrom = '3';
-			loadPPM3();
-			
 		} else {
 			compare = strcmp(PPMFileType, "P6\n");
 			if (!compare) {
@@ -215,6 +209,7 @@ int getPPMFileType() {
 				return 1;
 			}
 		}
+		loadPPM();
 	}
 	
 	return 0;
@@ -250,8 +245,12 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 	
-	if (convertTo = '6') {
-		if (writePPM6()) {
+	if (convertTo == '3') {
+		if (writeP3()) {
+			return 1;
+		}
+	} else if (convertTo = '6') {
+		if (writeP6()) {
 			return 1;
 		}
 	}
