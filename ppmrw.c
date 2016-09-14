@@ -213,13 +213,9 @@ int main(int argc, char* argv[]) {
 	}
 	
 	if (convertTo == '3') {
-		if (writeP3()) {
-			return 1;
-		}
+		if (writeP3()) { return 1; }
 	} else if (convertTo = '6') {
-		if (writeP6()) {
-			return 1;
-		}
+		if (writeP6()) { return 1; }
 	}
 	
 	fclose(fh);
