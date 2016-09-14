@@ -187,8 +187,6 @@ int writeP6() {
 }
 
 int main(int argc, char* argv[]) {
-	int returnValue = 0;
-	
 	if (argc != 4) {
 		fprintf(stderr, "Usage: ppmrw target input output.\n");
 		return 1;
@@ -227,5 +225,5 @@ int main(int argc, char* argv[]) {
 	fclose(fh);
 	free(pixmap);
 	
-	return returnValue;
+	return 0;
 }
