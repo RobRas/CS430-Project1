@@ -111,10 +111,8 @@ int parseP3(int index) {
 	return 0;
 }
 
-int parseP6(int index) {
-	pixmap[index].r = fgetc(fh);
-	pixmap[index].g = fgetc(fh);
-	pixmap[index].b = fgetc(fh);
+int parseP6() {
+	fread(pixmap, sizeof(Pixel), width * height, fh);
 	return 0;
 }
 
@@ -156,9 +154,7 @@ int loadPPM() {
 			if (parseP3(i)) { return 1; }
 		}
 	} else {
-		for (int i = 0; i < width * height; i++) {
-			if (parseP6(i)) { return 1; }
-		}
+		if (parseP6()) { return 1; }
 	}
 	return 0;
 }
@@ -173,11 +169,7 @@ int writeP3() {
 
 int writeP6() {
 	fprintf(fh, "P6\n# Converted with Robert Rasmussen's ppmrw\n%d %d\n%d\n", width, height, maxColorValue);
-	for (int i = 0; i < width * height; i++) {
-		putc(pixmap[i].r, fh);
-		putc(pixmap[i].g, fh);
-		putc(pixmap[i].b, fh);
-	}
+	fwrite(pixmap, sizeof(Pixel), width*height, fh);
 	return 0;
 }
 
@@ -211,7 +203,6 @@ int getPPMFileType() {
 				return 1;
 			}
 		}
-		loadPPM();
 	}
 	
 	return 0;
@@ -225,9 +216,7 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 	
-	if (getConversionType(argv[1])) {
-		return 1;
-	}
+	if (getConversionType(argv[1])) { return 1; }
 	
 	fh = fopen(argv[2], "r");
 	if (fh == NULL) {
@@ -235,9 +224,9 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 	
-	if (getPPMFileType()) {
-		return 1;
-	}
+	if (getPPMFileType()) { return 1; }
+	
+	if (loadPPM()) { return 1; }
 	
 	fclose(fh);
 	
