@@ -91,10 +91,10 @@ int getP3Value(unsigned char* outValue) {
 	if (rgbValue > maxColorValue) {
 		fprintf(stderr, "Color value exceeding max.");
 		return 1;
-	} else {
-		*outValue = rgbValue;
-		return 0;
 	}
+	
+	*outValue = rgbValue;
+	return 0;
 }
 
 int parseP3(int index) {
