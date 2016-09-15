@@ -35,17 +35,13 @@ int getPPMFileType() {
 	char PPMFileType [4];
 	
 	if (fgets(PPMFileType, 4, fh) != NULL) {
-		int compare = strcmp(PPMFileType, "P3\n");
-		if (!compare) {
+		if (!strcmp(PPMFileType, "P3\n")) {
 			convertFrom = '3';
+		} else if (!strcmp(PPMFileType, "P6\n")) {
+			convertFrom = '6';
 		} else {
-			compare = strcmp(PPMFileType, "P6\n");
-			if (!compare) {
-				convertFrom = '6';
-			} else {
-				fprintf(stderr, "Not a PPM file. Incompatible file type.\n");
-				return 1;
-			}
+			fprintf(stderr, "Not a PPM file. Incompatible file type.\n");
+			return 1;
 		}
 	}
 	
@@ -78,7 +74,7 @@ int getWidthAndHeight() {
 	i = 0;
 	while ((value[i] = fgetc(fh)) != '\n') {
 		if (!isdigit(value[i])) {
-			fprintf(stderr, "Image width is not valid.\n");
+			fprintf(stderr, "Image height is not valid.\n");
 			return 1;
 		}
 		i++;
