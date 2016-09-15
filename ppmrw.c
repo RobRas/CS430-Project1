@@ -206,7 +206,11 @@ int main(int argc, char* argv[]) {
 	
 	fclose(fh);
 	
-	fh = fopen(argv[3], "w");
+	if (convertTo == '3') {
+		fh = fopen(argv[3], "w");
+	} else if (convertTo == '6') {
+		fh = fopen(argv[3], "wb");
+	}
 	if (fh == NULL) {
 		fprintf(stderr, "Output file not found.");
 		return 1;
