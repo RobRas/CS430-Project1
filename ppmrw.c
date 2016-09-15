@@ -17,21 +17,16 @@ int maxColorValue;
 Pixel* pixmap;
 FILE* fh;
 
-int getConversionType(char* arg) {
-	int compare = strcmp(arg, "3");
-	if (!compare) {
-		compare = strcmp(arg, "6");
-		if (!compare) {
-			fprintf(stderr, "Target needs to be 3 or 6.\n");
-			return 1;
-		}
+void getConversionType(char* arg) {
+	if (!strcmp(arg, "3") && !strcmp(arg, "6")) {
+		fprintf(stderr, "Target needs to be 3 or 6.\n");
+		exit(1);
 	}
 	
 	convertTo = arg[0];
-	return 0;
 }
 
-int getPPMFileType() {
+void getPPMFileType() {
 	char PPMFileType [4];
 	
 	if (fgets(PPMFileType, 4, fh) != NULL) {
@@ -41,14 +36,12 @@ int getPPMFileType() {
 			convertFrom = '6';
 		} else {
 			fprintf(stderr, "Not a PPM file. Incompatible file type.\n");
-			return 1;
+			exit(1);
 		}
 	}
-	
-	return 0;
 }
 
-int getWidthAndHeight() {
+void getWidthAndHeight() {
 	char value[20];
 	
 	while ((value[0] = fgetc(fh)) == '#') {	// Line is a comment
@@ -57,14 +50,14 @@ int getWidthAndHeight() {
 	
 	if (!isdigit(value[0])) {
 		fprintf(stderr, "Image width is not valid.\n");
-		return 1;
+		exit(1);
 	}
 	
 	int i = 1;
 	while ((value[i] = fgetc(fh)) != ' ') {
 		if (!isdigit(value[i])) { 
 			fprintf(stderr, "Image width is not valid.\n");
-			return 1;
+			exit(1);
 		}
 		i++;
 	}
@@ -75,7 +68,7 @@ int getWidthAndHeight() {
 	while ((value[i] = fgetc(fh)) != '\n') {
 		if (!isdigit(value[i])) {
 			fprintf(stderr, "Image height is not valid.\n");
-			return 1;
+			exit(1);
 		}
 		i++;
 	}
@@ -83,7 +76,7 @@ int getWidthAndHeight() {
 	height = atoi(value);
 }
 
-int getMaxColorValue() {
+void getMaxColorValue() {
 	char value[4];
 	
 	for (int i = 0; i < 4; i++) {
@@ -93,7 +86,7 @@ int getMaxColorValue() {
 			break;
 		} else if (!isdigit(value[i])) {
 			fprintf(stderr, "Value must be a digit.\n");
-			return 1;
+			exit(1);
 		}
 	}
 	
@@ -101,16 +94,13 @@ int getMaxColorValue() {
 	
 	if (maxColorValue > 255) {
 		fprintf(stderr, "Not a PPM file. Max color value too high.\n");
-		return 1;
+		exit(1);
 	} else if (maxColorValue < 1) {
 		fprintf(stderr, "Not a PPM file. Max color value too low.\n");
-		return 1;
+		exit(1);
 	}
-	
-	return 0;
 }
-
-int getP3Value(unsigned char* outValue) {
+void getP3Value(unsigned char* outValue) {
 	unsigned char value[4];
 	int rgbValue;
 	
@@ -121,65 +111,51 @@ int getP3Value(unsigned char* outValue) {
 			break;
 		} else if (!isdigit(value[i])) {
 			fprintf(stderr, "Value must be a digit.\n");
-			return 1;
+			exit(1);
 		}
 	}
 	
 	rgbValue = atoi(value);
 	if (rgbValue > maxColorValue) {
 		fprintf(stderr, "Color value exceeding max.\n");
-		return 1;
+		exit(1);
 	}
 	
 	*outValue = rgbValue;
-	return 0;
 }
-
-int parseP3() {
+void parseP3() {
 	for (int i = 0; i < width * height; i++) {	
-		if (getP3Value(&pixmap[i].r)) {
-			return 1;
-		}
-		if (getP3Value(&pixmap[i].g)) {
-			return 1;
-		}
-		if (getP3Value(&pixmap[i].b)) {
-			return 1;
-		}
+		getP3Value(&pixmap[i].r);
+		getP3Value(&pixmap[i].g);
+		getP3Value(&pixmap[i].b);
 	}
-	
-	return 0;
 }
 
-int parseP6() {
+void parseP6() {
 	fread(pixmap, sizeof(Pixel), width * height, fh);
-	return 0;
 }
 
-int loadPPM() {
-	if (getWidthAndHeight()) { return 1; }
+void loadPPM() {
+	getWidthAndHeight();
 	pixmap = malloc(sizeof(Pixel) * width * height);
-	if (getMaxColorValue()) { return 1; }
+	getMaxColorValue();
 	if (convertFrom == '3') {
-		if (parseP3()) { return 1; }
+		parseP3();
 	} else if (convertFrom == '6') {
-		if (parseP6()) { return 1; }
+		parseP6();
 	}
-	return 0;
 }
 
-int writeP3() {
+void writeP3() {
 	fprintf(fh, "P3\n# Converted with Robert Rasmussen's ppmrw\n%d %d\n%d\n", width, height, maxColorValue);
 	for (int i = 0; i < width * height; i++) {
 		fprintf(fh, "%d\n%d\n%d\n", pixmap[i].r, pixmap[i].g, pixmap[i].b);
 	}
-	return 0;
 }
 
-int writeP6() {
+void writeP6() {
 	fprintf(fh, "P6\n# Converted with Robert Rasmussen's ppmrw\n%d %d\n%d\n", width, height, maxColorValue);
 	fwrite(pixmap, sizeof(Pixel), width*height, fh);
-	return 0;
 }
 
 int main(int argc, char* argv[]) {
@@ -188,7 +164,7 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 	
-	if (getConversionType(argv[1])) { return 1; }
+	getConversionType(argv[1]);
 	
 	fh = fopen(argv[2], "r");
 	if (fh == NULL) {
@@ -196,9 +172,9 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 	
-	if (getPPMFileType()) { return 1; }
+	getPPMFileType();
 	
-	if (loadPPM()) { return 1; }
+	loadPPM();
 	
 	fclose(fh);
 	
@@ -213,9 +189,9 @@ int main(int argc, char* argv[]) {
 	}
 	
 	if (convertTo == '3') {
-		if (writeP3()) { return 1; }
+		writeP3();
 	} else if (convertTo = '6') {
-		if (writeP6()) { return 1; }
+		writeP6();
 	}
 	
 	fclose(fh);
