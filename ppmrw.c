@@ -166,7 +166,7 @@ int main(int argc, char* argv[]) {
 	
 	getConversionType(argv[1]);
 	
-	fh = fopen(argv[2], "r");
+	fh = fopen(argv[2], "rb");
 	if (fh == NULL) {
 		fprintf(stderr, "Input file not found.\n");
 		return 1;
