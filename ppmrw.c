@@ -19,7 +19,7 @@ FILE* fh;
 
 void getConversionType(char* arg) {
 	if (!strcmp(arg, "3") && !strcmp(arg, "6")) {
-		fprintf(stderr, "Target needs to be 3 or 6.\n");
+		fprintf(stderr, "Error: Target needs to be 3 or 6.\n");
 		exit(1);
 	}
 	
@@ -35,7 +35,7 @@ void getPPMFileType() {
 		} else if (!strcmp(PPMFileType, "P6\n")) {
 			convertFrom = '6';
 		} else {
-			fprintf(stderr, "Not a PPM file. Incompatible file type.\n");
+			fprintf(stderr, "Error: Not a PPM file. Incompatible file type.\n");
 			exit(1);
 		}
 	}
@@ -49,14 +49,14 @@ void getWidthAndHeight() {
 	}
 	
 	if (!isdigit(value[0])) {
-		fprintf(stderr, "Image width is not valid.\n");
+		fprintf(stderr, "Error: Image width is not valid.\n");
 		exit(1);
 	}
 	
 	int i = 1;
 	while ((value[i] = fgetc(fh)) != ' ') {
 		if (!isdigit(value[i])) { 
-			fprintf(stderr, "Image width is not valid.\n");
+			fprintf(stderr, "Error: Image width is not valid.\n");
 			exit(1);
 		}
 		i++;
@@ -67,7 +67,7 @@ void getWidthAndHeight() {
 	i = 0;
 	while ((value[i] = fgetc(fh)) != '\n') {
 		if (!isdigit(value[i])) {
-			fprintf(stderr, "Image height is not valid.\n");
+			fprintf(stderr, "Error: Image height is not valid.\n");
 			exit(1);
 		}
 		i++;
@@ -85,7 +85,7 @@ void getMaxColorValue() {
 			value[i] = '\0';
 			break;
 		} else if (!isdigit(value[i])) {
-			fprintf(stderr, "Value must be a digit.\n");
+			fprintf(stderr, "Error: Value must be a digit.\n");
 			exit(1);
 		}
 	}
@@ -93,10 +93,10 @@ void getMaxColorValue() {
 	maxColorValue = atoi(value);
 	
 	if (maxColorValue > 255) {
-		fprintf(stderr, "Not a PPM file. Max color value too high.\n");
+		fprintf(stderr, "Error: Not a PPM file. Max color value too high.\n");
 		exit(1);
 	} else if (maxColorValue < 1) {
-		fprintf(stderr, "Not a PPM file. Max color value too low.\n");
+		fprintf(stderr, "Error: Not a PPM file. Max color value too low.\n");
 		exit(1);
 	}
 }
@@ -110,14 +110,14 @@ void getP3Value(unsigned char* outValue) {
 			value[i] = '\0';
 			break;
 		} else if (!isdigit(value[i])) {
-			fprintf(stderr, "Value must be a digit.\n");
+			fprintf(stderr, "Error: Value must be a digit.\n");
 			exit(1);
 		}
 	}
 	
 	rgbValue = atoi(value);
 	if (rgbValue > maxColorValue) {
-		fprintf(stderr, "Color value exceeding max.\n");
+		fprintf(stderr, "Error: Color value exceeding max.\n");
 		exit(1);
 	}
 	
@@ -168,7 +168,7 @@ int main(int argc, char* argv[]) {
 	
 	fh = fopen(argv[2], "rb");
 	if (fh == NULL) {
-		fprintf(stderr, "Input file not found.\n");
+		fprintf(stderr, "Error: Input file not found.\n");
 		return 1;
 	}
 	
@@ -184,7 +184,7 @@ int main(int argc, char* argv[]) {
 		fh = fopen(argv[3], "wb");
 	}
 	if (fh == NULL) {
-		fprintf(stderr, "Output file not found.\n");
+		fprintf(stderr, "Error: Output file not found.\n");
 		return 1;
 	}
 	
