@@ -60,14 +60,14 @@ int getWidthAndHeight() {
 	}
 	
 	if (!isdigit(value[0])) {
-		fprintf(stderr, "Image width is not valid.");
+		fprintf(stderr, "Image width is not valid.\n");
 		return 1;
 	}
 	
 	int i = 1;
 	while ((value[i] = fgetc(fh)) != ' ') {
 		if (!isdigit(value[i])) { 
-			fprintf(stderr, "Image width is not valid.");
+			fprintf(stderr, "Image width is not valid.\n");
 			return 1;
 		}
 		i++;
@@ -78,7 +78,7 @@ int getWidthAndHeight() {
 	i = 0;
 	while ((value[i] = fgetc(fh)) != '\n') {
 		if (!isdigit(value[i])) {
-			fprintf(stderr, "Image width is not valid.");
+			fprintf(stderr, "Image width is not valid.\n");
 			return 1;
 		}
 		i++;
@@ -96,7 +96,7 @@ int getMaxColorValue() {
 			value[i] = '\0';
 			break;
 		} else if (!isdigit(value[i])) {
-			fprintf(stderr, "Value must be a digit.");
+			fprintf(stderr, "Value must be a digit.\n");
 			return 1;
 		}
 	}
@@ -124,14 +124,14 @@ int getP3Value(unsigned char* outValue) {
 			value[i] = '\0';
 			break;
 		} else if (!isdigit(value[i])) {
-			fprintf(stderr, "Value must be a digit.");
+			fprintf(stderr, "Value must be a digit.\n");
 			return 1;
 		}
 	}
 	
 	rgbValue = atoi(value);
 	if (rgbValue > maxColorValue) {
-		fprintf(stderr, "Color value exceeding max.");
+		fprintf(stderr, "Color value exceeding max.\n");
 		return 1;
 	}
 	
@@ -196,7 +196,7 @@ int main(int argc, char* argv[]) {
 	
 	fh = fopen(argv[2], "r");
 	if (fh == NULL) {
-		fprintf(stderr, "Input file not found.");
+		fprintf(stderr, "Input file not found.\n");
 		return 1;
 	}
 	
@@ -212,7 +212,7 @@ int main(int argc, char* argv[]) {
 		fh = fopen(argv[3], "wb");
 	}
 	if (fh == NULL) {
-		fprintf(stderr, "Output file not found.");
+		fprintf(stderr, "Output file not found.\n");
 		return 1;
 	}
 	
